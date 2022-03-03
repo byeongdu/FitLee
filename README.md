@@ -21,18 +21,20 @@ fminsearchcon.m is written by John D'Errico. See the detail from the m file.
 - The fitting code consists of four blocks. For example, have a look at models>FitLee_schultzsphere2.m.
 
 1. Block I: the text block that will appear when "Reference" button is pressed.
-'''python
+
+```matlab
 function [out, report] = FitLee_schultzsphere2(varargin)
 FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
 '$I(q) = fn_0\cdot(Sq\cdotP(q; r_0, \sigma_0) + N_{ratio}\cdot\delta_{\rho1}^2*P(q; r_1, \sigma_1)) + Ib$',...
-...
+```
 'Ref: ',...
 '    1. Kwon et al. Nature Materials, 2015, 14, 215–223. ',...
 '    2. Wang et al. J. Phys. Chem. C. 2013. 117(44), 22627. '};
 '''
 2. Block II: the block contains fit parameters and intialize the fitting GUI.
 - Do not change this block.
-'''matlab
+
+```matlab
 if numel(varargin) > 1
     p = varargin{1};
     q = varargin{2};
@@ -69,9 +71,11 @@ if iscell(q)
     end
     q = q{1};
 end
-'''
+```
+
 3. Block III : fitting code
-'''matlab
+
+```matlab
 r_e = 2.818E-5; % Angstrom
 ....
 out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
@@ -79,11 +83,12 @@ out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nra
 if isnan(out)
     out = ones(size(out));
 end
-'''
+```
 
 4. Block IV: this block will run when "Print aux result" button.
 - Use this block for compute additional information, for example to draw the model or size distribution as below:
-'''matlab
+
+```matlab
 if nargout == 2 # Do not change this line
     x = 0:1:(max(p.r0, p.r1)+max(p.sig0, p.sig1)*10);
     ....
@@ -97,4 +102,4 @@ if nargout == 2 # Do not change this line
     
     report = '';    # do not change this line.
 end
-'''
+```
