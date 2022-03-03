@@ -21,7 +21,7 @@ fminsearchcon.m is written by John D'Errico. See the detail from the m file.
 - The fitting code consists of four blocks. For example, have a look at models>FitLee_schultzsphere2.m.
 
 1. Block I: the text block that will appear when "Reference" button is pressed.
-'''matlab
+'''python
 function [out, report] = FitLee_schultzsphere2(varargin)
 FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
 '$I(q) = fn_0\cdot(Sq\cdotP(q; r_0, \sigma_0) + N_{ratio}\cdot\delta_{\rho1}^2*P(q; r_1, \sigma_1)) + Ib$',...
