@@ -1,0 +1,23 @@
+function y = lorzsinc(qxy, qz, p)
+% y = lorzsinc(qxy, qz, p)
+% qphkl = p(1);
+% qzhkl = p(2);
+% lw = p(3);
+% Nlayer = p(4);
+% a3 = p(5);
+a3 = 360; 
+qphkl = p(1);
+qzhkl = p(2);
+lw = p(3);
+Nlayer = p(4);
+a3 = p(5);
+dqxy = p(6);
+dqz = p(7);
+peak = lorza(qxy, [1, qphkl, lw, 0]);
+S = abs(sinc(Nlayer*abs(qz-qzhkl)*a3)).^2;
+y = peak.*S;
+%area = sum(sum(y, 2))*dqxy*dqz;
+FWHM = 4*sqrt(pi*log(2))/a3/Nlayer;
+area = FWHM*Nlayer^2/10;
+y = abs(y/area);
+
