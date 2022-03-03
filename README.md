@@ -19,6 +19,7 @@ fminsearchcon.m is written by John D'Errico. See the detail from the m file.
 
 ## How to write your own fitting code.
 - The fitting code consists of four blocks. For example, have a look at models>FitLee_schultzsphere2.m.
+
 1. Block I: the text block that will appear when "Reference" button is pressed.
 
 function [out, report] = FitLee_schultzsphere2(varargin)
@@ -30,7 +31,8 @@ FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
 '    2. Wang et al. J. Phys. Chem. C. 2013. 117(44), 22627. '};
 
 2. Block II: the block contains fit parameters and intialize the fitting GUI.
-- Do not change this block...
+- Do not change this block.
+
 if numel(varargin) > 1
     p = varargin{1};
     q = varargin{2};
@@ -49,6 +51,7 @@ end
 
 %% initialize fit parameter bestP
 - Edit the block as needed.
+
 if isini
     Nf = p;         # Do not change this line.
     bestP = [];     # Do not change this line.
