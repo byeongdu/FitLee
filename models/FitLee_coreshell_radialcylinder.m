@@ -109,10 +109,10 @@ Pcluster = guinierporodmodel(q, p.I0_2, p.P_2, p.Rg_2, p.s_2);
 Sq = Sq0 + Pcluster;
 %Sq = 1;
 
-pnumberfraction = p.volf/(Vcyl*Angstrom2Centimeter^3);
+pnumberfraction = p.volf/(Vcyl);
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
 
-out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*Iq.*Sq + back;
+out = pnumberfraction*r_e^2*Iq.*Sq/Angstrom2Centimeter + back;
 if isnan(out)
     out = ones(size(out))*1E20;
 end

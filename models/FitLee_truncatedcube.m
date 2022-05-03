@@ -99,7 +99,8 @@ Sq1 = strfactor2(q, p.D, p.vf);
 Sq = p.powI*q.^p.PorodExp + Sq1;
 
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
-out = p.fn0*r_e^2*Angstrom2Centimeter^2*p.delta_rho^2*Pq/Angstrom2Centimeter^3.*Sq+back;
+f = p.fn0*r_e^2/Angstrom2Centimeter;
+out = f*p.delta_rho^2*Pq.*Sq+back;
 %out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
 
 if isnan(out)

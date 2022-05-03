@@ -112,8 +112,8 @@ q = q(:);
 Sq = strfactor2(q, p.D, p.vf);
 
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4 + p.SF_userBG*UBG;
-pnumberfraction = p.fn0/(Vm*Angstrom2Centimeter^3);
-f = pnumberfraction*r_e^2*Angstrom2Centimeter^2;
+pnumberfraction = p.fn0/(Vm);
+f = pnumberfraction*r_e^2/Angstrom2Centimeter;
 Iq0 = f*P.*Sq;
 Iq1 = f*Pc;
 out = Iq0 + Iq1 + back;

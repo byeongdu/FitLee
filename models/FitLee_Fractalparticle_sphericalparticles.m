@@ -1,4 +1,4 @@
-function [out, report] = FitLee_FractalAggregateofFractalPP(varargin)
+function [out, report] = FitLee_Fractalparticle_sphericalparticles(varargin)
     % schultz polydisperse sphere with structure factors.
     % This function is only for fitting a set of data at a time.
     % if numel(varargin) == 1 and p is not a struct but a number, then
@@ -29,7 +29,7 @@ FitLee_helpstr = {'Fractal Aggregates and Schultz polydisperse. ' ,...
 '   R : hydrodynamic radius',...
 '   \nu : volume fraction',...
 '\bf{Parameters}',...
-'\rm  fn0 : volume fraction of particle 0 (A^-3)',...
+'\rm  fn0 : volume fraction of particle 0 ',...
 '  N_{ratio} : Number ratio of particle 2 over a PP particle',...
 '  \Delta\rho_2 : electron density difference for particle 2 (A)',...
 '  SFuserBG : Scale factor for the user input background',...
@@ -140,8 +140,8 @@ else
 end
 
 % Fractal Primary Particles
-pnumberfraction = p.fn;
-f = pnumberfraction*r_e^2;
+volfraction = p.fn;
+f = volfraction*r_e^2;
 % Rg = sqrt(3/5)*R. Therefore, R = Rg*sqrt(5/3) and volume = 4*pi/3*R^3
 R = p.Rg_PP*sqrt(5/3);
 PPvol = 4*pi/3*R^3;
@@ -160,6 +160,7 @@ if numel(Iq2) == 1
     Iq2 = Iq2*ones(size(Iq1));
 end
 out = [out(:), Iq1(:), Iq2(:), back(:)];
+%out = out*Angstrom2Centimeter; % data is in cm^-1
 if isnan(out)
     out = ones(size(out));
 end

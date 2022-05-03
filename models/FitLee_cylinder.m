@@ -79,10 +79,10 @@ Angstrom2Centimeter = 1E-8;
 
 Sq = strfactor2(q, p.D, p.vf);
 
-pnumberfraction = p.volfrac/(Vcyl*Angstrom2Centimeter^3);
+pnumberfraction = p.volfrac/Vcyl/Angstrom2Centimeter;
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
 
-out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*p.delta_rho^2*Iq.*Sq + back;
+out = pnumberfraction*r_e^2*p.delta_rho^2*Iq.*Sq + back;
 
 
 if isnan(out)

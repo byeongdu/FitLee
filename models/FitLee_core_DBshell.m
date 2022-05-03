@@ -1,34 +1,24 @@
-function [out, report] = FitLee_core_fuzzyshell(varargin)
+function [out, report] = FitLee_core_DBshell(varargin)
     % schultz polydisperse sphere with structure factors.
     % This function is only for fitting a set of data at a time.
     % if numel(varargin) == 1 and p is not a struct but a number, then
     % it generate set of default parameters for using this function.
-FitLee_helpstr = {'Core-fuzzyshell model, where the shell is fuzzy. ' ,...
+FitLee_helpstr = {'Core-shell model, where the shell is a DB type. ' ,...
 'I(q) = fn0*(Sq*P(q; r0, sig0)) + background',...
 '    background = poly1*q.^poly2 + poly3*q + poly4 + SF_userBG*UsersBackground',...
-'    P(q) = fn0([(rho_shell-rho_solv)*Vo*Ps(qRo)exp(-(q*sig)^2/2) -',...
-'           - (rho_shell-rho_core)*Vc*Ps(qRo*v)]^2',...
-'           + Nc*(delta_rhochain*Vch)^2*Pc(q*Rg))',...
+'    P(q) = |(rhoc-rhosh)Fsp(Rc)+(rhosh-rhosolv)F_DBshell|^2',...
+'         ~ |(rhoc-rhosh)|^2|Fsp(Rc)|^2+|(rhosh-rhosolv)F_DBshell|^2',...
 'Parameters',...
-'  fn0 : volume fraction of particle (A^-3)',...
+'  fn0 : volume fraction of particle ',...
 '  rho_shell : electron density of shell (A^-3)',...
 '  rho_core : electron density of core (A^-3)',...
-'  delta_rhochain : Excess electron density of chain (A^-3)',...
-'  Ro : Outer radius (shell) (A)',...
-'  v : ratio of radii of core and shell (v = Rc/Rs)',...
+'  xsi : Correlation length of the shell (A)',...
 '  sig: Density gradient at shell/solvent interface (A)',...
-'  Nc : Number chains per particle',...
-'  Rg : Rg of the chain (A)',...
 '  D : Interparticle distance (A) (hard sphere potential S(q))',...
 '  vf : volume fraction of particle 0 (hard sphere potential S(q)) ',...
-'  SF_userBG : Scale factor for the user input background',...
-'  UsersBackground : Two column formatted user"" input background',...
 '  ',...
 '',...
 'Note that',...
-'I(q)_diff_cross_section = (delta_rho*r_e)^2*f_n*P(q)',...
-'         , where P(0) = V_p^2'...
-' ref: http://aip.scitation.org/doi/pdf/10.1063/1.1493771',...
 'Byeongdu Lee (blee@anl.gov)',...
 };
 
@@ -57,17 +47,21 @@ if isini
     %Nf = p;
     bestP = [];
     bestP.fn0 = 1;
-    bestP.core_rho = 0.3;
-    bestP.Rcore = 0.5;
-    bestP.sigcore = 0.1;
+    bestP.core_rho = 4.66;
+    bestP.Rcore = 100;
+    bestP.sigcore = 10;
     
-    bestP.sh_rho = 0.4;
-    bestP.sh_thick = 50;
-    bestP.sig_fuzzy = 10;
+    bestP.sh_rho = 0.34;
+    bestP.sh_Rg = 150;
+    bestP.chainRg = 50;
+    bestP.Nchains = 1000;
+    bestP.polymerMw = 2000;
+    bestP.monomerMw = 104.15;
+    bestP.polymerdensity = 1.04;
     
-    bestP.solvent_rho = 0.3344;
+    bestP.solvent_rho = 0.284;
     
-    bestP.D = 100;
+    bestP.D = 200;
     bestP.vf = 0.1;
 
     bestP.poly1 = 0;
@@ -94,16 +88,38 @@ Angstrom2Centimeter = 1E-8;
 %r_e2 = (r_e*Angstrom2Centimeter)^2;
 
 q = q(:);
-P = coreshell(p, q);
+
+[y, V2, V, ~, ~, Fq] = SchultzsphereFun(q, p.Rcore, p.sigcore);
+Isp = y*V2;
+pnumberfraction = p.fn0/(V);
+f = pnumberfraction*r_e^2;
+Isp = f*(p.core_rho - p.sh_rho)^2*Isp;
+
+delta_rho =  p.sh_rho - p.solvent_rho;
+xsi = p.sh_Rg/sqrt(6); % see my chem rev. text below eqn 63.
+VDB = 8*pi*xsi^3; % V = invariant of DB.
+volf = VDB;
+%volf = f*(p.sh_Rg*sqrt(5/3))^3*4*pi/3*5.2705;
+yDB = DebyeBueche(q, [delta_rho, volf, xsi, 0]);
+
+%Icross = f*(p.core_rho - p.sh_rho)*V*exp(-q.^2*3/5*p.Rcore^2/3/10).*sqrt(yDB);
+yDB = f*yDB;
+
+% chain
+monomervol = p.monomerMw/p.polymerdensity/(6.02E23)/Angstrom2Centimeter^3; % unit cm^3
+Nmonomer = p.polymerMw/p.monomerMw;
+yP = delta_rho^2*monomervol^2*Nmonomer^2*Pchain(q, p.chainRg); % scattering from a single chain.
+yP = f*p.Nchains*yP;
+
 Sq = strfactor2(q, p.D, p.vf);
 
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
-[~, Vm] = schultzRg(p.Rcore, p.sigcore);
-pnumberfraction = p.fn0/Vm/Angstrom2Centimeter;
-f = pnumberfraction*r_e^2;
-Iq0 = f*P.*Sq;
+yDB = yDB/Angstrom2Centimeter;
+yP = yP/Angstrom2Centimeter;
+Isp = Isp/Angstrom2Centimeter;
+Iq0 = (yDB + yP + Isp).*Sq;
 out = Iq0 + back;
-out = [out(:), Iq0(:), back(:)];
+out = [out(:), Isp(:), yDB(:), yP(:), back(:)];
 if isnan(out)
     out = ones(size(out));
 end
@@ -121,6 +137,10 @@ if nargout == 2
     plot(r, rho)
     report = '';
 end
+function y = Pchain(q, Rg)
+    x = (q*Rg).^2;
+    y = 2*(exp(-x)-1+x)./x.^2;
+
 function yf = coreshell(p, q)
     sig = p.sig_fuzzy;
     if p.sigcore ==0

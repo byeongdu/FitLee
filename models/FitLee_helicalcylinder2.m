@@ -107,8 +107,9 @@ end
 
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
 
-pnumberfraction = p.volf/(V*Angstrom2Centimeter^3);
-out = [pnumberfraction*r_e^2*Angstrom2Centimeter^2*p.delta_rho^2*Iq+back, back];
+pnumberfraction = p.volf/(V);
+f = pnumberfraction/Angstrom2Centimeter;
+out = [f*r_e^2*p.delta_rho^2*Iq+back, back];
 if isnan(out)
     out = ones(size(out));
 end

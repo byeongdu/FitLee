@@ -67,7 +67,7 @@ end
 q = q(:);
 Iq = p.a*I_a + p.b*I_b;
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
-%out = Poq + pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
+%out = Poq + pnumberfraction*r_e^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
 out = [Iq + back, Iq, back];
 if isnan(out)
     out = ones(size(out));

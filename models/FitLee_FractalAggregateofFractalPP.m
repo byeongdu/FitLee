@@ -142,7 +142,7 @@ end
 
 % Fractal Primary Particles
 pnumberfraction = p.fn;
-f = pnumberfraction*r_e^2;
+f = pnumberfraction*r_e^2/Angstrom2Centimeter;
 % Rg = sqrt(3/5)*R. Therefore, R = Rg*sqrt(5/3) and volume = 4*pi/3*R^3
 R = p.Rg_PP*sqrt(5/3);
 PPvol = 4*pi/3*R^3;
@@ -176,6 +176,7 @@ if nargout == 2
     figure;
     plot(x, nr);xlabel('Radius (A)');ylabel('n(r)')
     fprintf('Volume of particle0 : %0.3e A^3\n', V0);
+    pnumberfraction = pnumberfraction/Angstrom2Centimeter^3; % num fraction in 1/cm^3 unit.
     fprintf('Number fraction of particle0 : %0.3e particles/cm^3. \n', pnumberfraction)
     fprintf('Mol concentration : %0.3e M (mole/L). \n', pnumberfraction/6.022E23/1E-3)
     ns = input('Type the  density of a particle in g/mL unit. e.g. water = 1;');

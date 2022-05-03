@@ -81,7 +81,6 @@ Sq1 = strfactor2(q, p.D, p.vf);
 %Sq = p(4)*q(:).^p(5) + strfactor_2Dpara(q, p(6), p(7));
 %Iq = p(1)*Imat*nr1/sum(nr1)
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
-%pnumberfraction = p.f0;
 out = p.powI*q.^p.PorodExp + Pq_0.*Sq1 + Pq_1 + back;
 if isnan(out)
     out = ones(size(out));

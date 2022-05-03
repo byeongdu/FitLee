@@ -8,7 +8,7 @@ FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
 '    Sq = guinierporodmodel(q, I0_2, s_2, Rg_2, P_2) + S(q; D, vf)',...
 '    background = poly1*q.^poly2 + poly3*q + poly4 + SF_userBG*UsersBackground',...
 'Parameters',...
-'  fn0 : volume fraction of particle 0 (A^-3)',...
+'  fn0 : volume fraction of particle 0 ',...
 '  delta_rho0 : electron density difference for particle 0 (A^-3)',...
 '  r0 : Schultz size distribution, radius peak (A)',...
 '  sig0: Schultz size distribution, FWHM (A)',...
@@ -125,9 +125,10 @@ Sq = Poq + Pq_1 + Sq1;
 %Sq = p(4)*q(:).^p(5) + strfactor_2Dpara(q, p(6), p(7));
 %Iq = p(1)*Imat*nr1/sum(nr1)
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4 + p.SF_userBG*UBG;
-pnumberfraction = p.fn0/(V0*Angstrom2Centimeter^3);
+pnumberfraction = p.fn0/V0;
 %out = Poq + pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
-out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
+out = pnumberfraction*r_e^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2);
+out = out/Angstrom2Centimeter+back; % data is in cm^-1
 if isnan(out)
     out = ones(size(out));
 end
@@ -143,6 +144,7 @@ if nargout == 2
     figure;
     plot(x, nr);xlabel('Radius (A)');ylabel('n(r)')
     fprintf('Volume of particle0 : %0.3e A^3\n', V0);
+    pnumberfraction = pnumberfraction/Angstrom2Centimeter^3; % num fraction in 1/cm^3 unit.
     fprintf('Number fraction of particle0 : %0.3e particles/cm^3. \n', pnumberfraction)
     fprintf('Mol concentration : %0.3e M(mole/L). \n', pnumberfraction/6.022E23/1E-3)
     ns = input('Type the  density of a particle in g/mL unit. e.g. water = 1;');

@@ -63,7 +63,6 @@ if iscell(q)
 end
 
 %[~, ~, V0] = SchultzsphereFun(q, p.coreR, p.sigma*p.coreR);
-%factor = pnumberfraction*r_e^2*Angstrom2Centimeter^2;
 
 
 q = q(:);

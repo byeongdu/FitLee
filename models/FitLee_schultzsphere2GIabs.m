@@ -1,14 +1,14 @@
-function [out, report] = FitLee_schultzsphere2(varargin)
+function [out, report] = FitLee_schultzsphere2GIabs(varargin)
     % schultz polydisperse sphere with structure factors.
     % This function is only for fitting a set of data at a time.
     % if numel(varargin) == 1 and p is not a struct but a number, then
     % it generate set of default parameters for using this function.
-FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
-'$I(q) = fn_0\cdot(Sq\cdotP(q; r_0, \sigma_0) + N_{ratio}\cdot\delta_{\rho1}^2*P(q; r_1, \sigma_1)) + Ib$',...
+FitLee_helpstr = {'Schultz polydisperse sphere fit in $d*d\Sigma/d\Omega$. ' ,...
+'I(q) = f0*(delta_rho0^2*Sq*P(q; r0, sig0) + Nratio*delta_rho1^2*P(q; r1, sig1)) + background',...
 '    Sq = powI*q.^PorodExp + S(q; D, vf)',...
 '    background = poly1*q.^poly2 + poly3*q + poly4',...
 'Parameters',...
-'  fn0 : volume fraction of particle 0 ',...
+'  f0 : Number fraction of particle 0 per unit area = N0/S',...
 '  delta_rho0 : electron density difference for particle 0 (A^-3)',...
 '  r0 : Schultz size distribution, radius peak (A)',...
 '  sig0: Schultz size distribution, FWHM (A)',...
@@ -18,7 +18,7 @@ FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
 '  vf : volume fraction of particle 0 (hard sphere potential S(q)) ',...
 '',...
 'Note that',...
-'I(q)_diff_cross_section = (delta_rho*r_e)^2*f_n*P(q)',...
+'d*I(q)_diff_cross_section = (delta_rho*r_e)^2*N/S*P(q)',...
 '         , where P(0) = V_p^2'...
 ' ',...
 'Byeongdu Lee (blee@anl.gov)',...
@@ -49,7 +49,7 @@ if isini
     bestP.delta_rho0 = 1;
     bestP.r0 = 100;
     bestP.sig0 = 10;
-    bestP.fn0 = 1;
+    bestP.f0 = 1;
     bestP.delta_rho1 = 1;
     bestP.r1 = 100;
     bestP.sig1 = 10;
@@ -69,7 +69,7 @@ if isini
 end
 
 %% fitting codes .......................
-if iscell(q)
+if iscell(q);
     if numel(q) > 1
         error('FitLee_schultzsphere.m is for fitting a set of data, for now')
     end
@@ -83,8 +83,8 @@ Angstrom2Centimeter = 1E-8;
 q = q(:);
 
 [Pq1, V1, V0] = SchultzsphereFun(q, p.r0, p.sig0);
-Pq1 = V1*Pq1(:); % in A^6 unit.
-if abs(p.Nratio) > 0
+Pq1 = V1*Pq1(:);
+if abs(p.f0) > 0
     [Pq2, V2] = SchultzsphereFun(q, p.r1, p.sig1);
     Pq2 = V2*Pq2(:);
 else
@@ -96,42 +96,35 @@ Sq = p.powI*q.^p.PorodExp + Sq1;
 %Sq = p(4)*q(:).^p(5) + strfactor_2Dpara(q, p(6), p(7));
 %Iq = p(1)*Imat*nr1/sum(nr1)
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
-pnumberfraction = p.fn0/V0; % A-3 unit.
-out = pnumberfraction*r_e^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2); % A-1 unit.
-out = out/Angstrom2Centimeter+back; % data is in cm^-1
+%pnumberfraction = p.f0;
+    [~, ~, ~, S] = schultzRg(p.r0, p.sig0);
+    S = S/4; % 4 pi R(A) ^2 --> pi*R(nm)^2
+f0 = (1-p.f0)*p.f0/S;
+out = f0*r_e^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
 if isnan(out)
     out = ones(size(out));
 end
 
 if nargout == 2
     x = 0:1:(max(p.r0, p.r1)+max(p.sig0, p.sig1)*10);
-    x = x(:);
     nr0 = schultz(p.r0, p.sig0, x);
     nr = nr0;
     if p.Nratio > 0
         nr1 = schultz(p.r1, p.sig1, x);
         nr = nr+p.Nratio*nr1;
     end
-    [zRg, V, V2, S] = schultzRg(p.r0, p.sig0);
-    vmeanR = trapz(x, x.^3.*nr0);vmeanR = vmeanR^(1/3);
-    v2meanR = trapz(x, x.^6.*nr0);v2meanR = v2meanR^(1/6);
-    figure;
+    figure;subplot(2,1,1)
     plot(x, nr);xlabel('Radius (A)');ylabel('n(r)')
-    pnumberfraction = pnumberfraction/Angstrom2Centimeter^3; % num fraction in 1/cm^3 unit.
-    fprintf('Statistical information of the particle 0 ======================================\n');
-    fprintf('Number-mean radius of a single particle : %0.3e %c.\n', p.r0, char(197));
-    fprintf('Volume-mean radius of a single particle : %0.3e %c.\n', vmeanR, char(197));
-    fprintf('Volume-squared-mean radius of a single particle : %0.3e %c.\n', v2meanR, char(197));
-    fprintf('Mean surface area of a single particle : %0.3e %c^2.\n', S, char(197));
-    fprintf('Mean volume of a single particle : %0.3e %c^3.\n', V, char(197));
-    fprintf('Mean square volume of a single particle : %0.3e %c^6.\n', V2, char(197));
-    fprintf('Radius of gyration (Rg) : %0.3e %c.\n', zRg, char(197));
-    fprintf('Number concentration : %0.3e particles/cm^3. \n', pnumberfraction)
-    fprintf('Mol concentration : %0.3e M (mole/L). \n', pnumberfraction/6.022E23/1E-3)
-    fprintf('Weight concentration (g/mL) can be obtained by multiplying your particles'' density (g/mL) to the fn0.\n');
-    fprintf('==============================================================\n');
-%     ns = input('Type the  density of a particle in g/mL unit. e.g. water = 1;');
-%     fprintf('Weight concentration of your particles: %0.3e g/mL. \n', p.fn0*ns)
+    subplot(2,1,2)
+    Vr = nr(:).*x(:).^3;
+    plot(x, Vr);xlabel('Radius (A)');ylabel('V(r)')
+    volumedistribution = [x(:), Vr];
+    assignin('base', 'volumedistribution', volumedistribution);
     
+    fprintf('Volume of particle0 : %0.3e A^3\n', V0);
+    %[~, ~, ~, S] = schultzRg(p.r0, p.sig0);
+    %S = S/4/100; % 4 pi R(A) ^2 --> pi*R(nm)^2
+    pnumberfraction = p.f0 / (S*100);
+    fprintf('Number fraction of particle0 : %0.3e/nm^2. \n', pnumberfraction)
     report = '';
 end

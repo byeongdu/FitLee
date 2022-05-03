@@ -104,15 +104,15 @@ else
     Pq2 = 0;
 end
 
-pnumberfraction = p.fn0/(V0*Angstrom2Centimeter^3);
-
+pnumberfraction = p.fn0/(V0);
+f = pnumberfraction/Angstrom2Centimeter;
 
 Sq1 = strfactor2(q, p.D, p.vf);
 Sq = p.powI*q.^p.PorodExp + Sq1;
 %Sq = p(4)*q(:).^p(5) + strfactor_2Dpara(q, p(6), p(7));
 %Iq = p(1)*Imat*nr1/sum(nr1)
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
-out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
+out = f*r_e^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
 %out = pnumberfraction*r_e^2*Angstrom2Centimeter^2*(p.delta_rho0^2*Pq1.*Sq+ p.Nratio*p.delta_rho1^2*Pq2)+back;
 
 if isnan(out)
