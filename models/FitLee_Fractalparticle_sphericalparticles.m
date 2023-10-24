@@ -4,7 +4,7 @@ function [out, report] = FitLee_Fractalparticle_sphericalparticles(varargin)
     % if numel(varargin) == 1 and p is not a struct but a number, then
     % it generate set of default parameters for using this function.
 FitLee_helpstr = {'Fractal Aggregates and Schultz polydisperse. ' ,...
-'I(q) = Ipow \cdot q^{Pexp} + fn0 (I_0 \cdot S_c(q) \cdot P(q; Rg_{PP}, P_{PP}) + N_{ratio,2} \cdot \Delta\rho_2^2 \cdot S(q; R_2, \nu_2) \cdot P(q; r_2, \sigma_2)) + I_b',...
+'I(q) = Ipow \cdot q^{Pexp} + fn0 \cdot S_c(q) \cdot (I_0 \cdot \cdot P(q; Rg_{PP}, P_{PP}) + N_{ratio,2} \cdot \Delta\rho_2^2 \cdot S(q; R_2, \nu_2) \cdot P(q; r_2, \sigma_2)) + I_b',...
 '    S_c(q) = guinierporodmodel(q, I_{0,c}, s_c, Rg_c, P_c) + S(q; R_{PP}, \nu_{PP})',...
 '    I_b = poly1 \cdot q^{poly2} + poly3 \cdot q + poly4 + SFuserBG \cdot UsersBackground',...
 '    UsersBackground : Two column formatted user"" input background',...
@@ -70,21 +70,23 @@ if isini
     bestP.delta_rho_PP = 1;
     bestP.Rg_PP = 300;
     bestP.P_PP = 4;
-    % Clusters of the praimary particles.
     bestP.Rh_PP = 100;
     bestP.vf_PP = 0.0;
+
+    % Primary spherical Particles
+    bestP.Nratio2 = 0;
+    bestP.delta_rho2 = 0.466;
+    bestP.r_sphere = 10;
+    bestP.sigma_sphere = 1;
+    bestP.Rh_sphere = 20;
+    bestP.vf_sphere = 0.0;
+
+    % Clusters of the praimary particles.
     bestP.I0_cluster = 1;
     bestP.s_cluster = 1;
     bestP.Rg_cluster = 300;
     bestP.P_cluster = 4;
     
-    % Secondary Particles
-    bestP.Nratio2 = 0;
-    bestP.delta_rho2 = 0.466;
-    bestP.r2 = 10;
-    bestP.sigma2 = 1;
-    bestP.Rh2 = 20;
-    bestP.vf2 = 0.0;
     
     % Need 4 parameters for background.
     bestP.poly1 = 0;
@@ -129,14 +131,14 @@ PP = guinierporodmodel(q, 1, p.P_PP, p.Rg_PP, 0);
 %PP = guinierporodmodel(q, p.I0_PP, p.P_PP, p.Rg_PP, p.s_PP);
 
 % Spherical Particles
-if p.Nratio2 == 0 || p.r2 == 0
+if p.Nratio2 == 0 || p.r_sphere == 0
     Pq2 = 1;
     Sq2 = 1;
     V0 = 1;
 else
-    [Pq2, V2, V0] = SchultzsphereFun(q, p.r2, p.sigma2);
+    [Pq2, V2, V0] = SchultzsphereFun(q, p.r_sphere, p.sigma_sphere);
     Pq2 = V2*Pq2(:);
-    Sq2 = strfactor2(q, p.Rh2, p.vf2);
+    Sq2 = strfactor2(q, p.Rh_sphere, p.vf_sphere);
 end
 
 % Fractal Primary Particles
@@ -146,16 +148,17 @@ f = volfraction*r_e^2;
 R = p.Rg_PP*sqrt(5/3);
 PPvol = 4*pi/3*R^3;
 %Iq1 = f*PPvol^2*PP.*Sq;
-Iq1 = f*PPvol^2*(p.delta_rho_PP^2*PP + Pcluster);
+Iq1 = PPvol^2*(p.delta_rho_PP^2*PP);
+%Iq1 = f*PPvol^2*(p.delta_rho_PP^2*PP + Pcluster);
 % Spherical Particles
-Iq2 = f*p.Nratio2*p.delta_rho2^2*Pq2.*Sq2;
+Iq2 = p.Nratio2*p.delta_rho2^2*Pq2.*Sq2;
 
 % background
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4 + p.SF_userBG*UBG;
 
 
 % Intensity
-out = Iq1 + Iq2 + back;
+out = f*Sq.*(Iq1 + Iq2) + back;
 if numel(Iq2) == 1
     Iq2 = Iq2*ones(size(Iq1));
 end

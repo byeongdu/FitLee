@@ -168,7 +168,7 @@ end
     function figH = initFigure(bestP, fitfunctionname)
         hFigHeight_default = 5*20 + 100;
         pnames = fieldnames(bestP);
-        is_nodisplay = contains_replace(pnames, 'no_display');
+        is_nodisplay = contains(pnames, 'no_display');
         Npnames = numel(pnames)-sum(is_nodisplay);
         posScreen   = get(0,'screenSize');
         hFigWidth   = 650;
@@ -482,8 +482,8 @@ end
             position(1) = baseHpos + 20;
             position(2) = 20*(i-1) + 25 + baseVpos;
             label = pnames{i};
-            if ~contains_replace(label, 'option')
-                if ~contains_replace(pnames{i}, 'no_display') && ~strcmp(pnames{i}, 'string')
+            if ~contains(label, 'option')
+                if ~contains(pnames{i}, 'no_display') && ~strcmp(pnames{i}, 'string')
                     generate_uifit(position, label, bestP.(pnames{i}), i, figH);
                 end
             end

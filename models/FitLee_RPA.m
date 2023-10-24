@@ -72,6 +72,8 @@ if isini
     bestP.NnH = 1200;
     bestP.phiD = 0.3;
     bestP.background = 0;
+    bestP.SF_userBG = 1;
+    bestP.string = 'FitLee_schultzsphere5(figH)';
     assignin('base', 'bestP', bestP);
     out = bestP;
     return
@@ -86,6 +88,12 @@ if iscell(q);
 end
 q = q(:);
 
+try
+    UBG = evalin('base', 'userbackground');
+    UBG = interp1(UBG(:,1), UBG(:,2), q);
+catch
+    UBG = zeros(size(q));
+end
 
 contrast = p.contrast;
 RgnD = p.RgnD;
@@ -131,8 +139,12 @@ phiH = 1-phiD;
 v =1/(phiD/vD + phiH/vH);
 S = 1./(1./(vD*phiD*NnD*PD) + 1./(vH*phiH*NnH*PH) - 2*chi/v);
 Intensity = contrast*S;
-
-out = background + Intensity;
+Iq = Intensity(:) + p.SF_userBG*UBG + background;
+if numel(background)==numel(Iq)
+    out = [Iq, Intensity(:), p.SF_userBG*UBG, background(:)];
+else
+    out = [Iq, Intensity(:), p.SF_userBG*UBG];
+end
 
 if isnan(out)
     out = ones(size(out));
