@@ -1,8 +1,8 @@
 function [y, name, pnames, pin]=gaussa(x,p, flag)
 % gauss     : Gaussian area
-% [y, {name, pnames, pin}]=gauss(x,p, {flag}) 
+% [y, {name, pnames, pin}]=gaussa(x,p, {flag}) 
 % MFIT Gaussian fitting function
-% p = [ Amp Centre Width BackG ]
+% p = [ Area Centre Width BackG ]
 
 % Author:  MZ <mzinkin@sghms.ac.uk>
 % Description: Gaussian

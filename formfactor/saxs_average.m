@@ -1,4 +1,4 @@
-function [yall, avgFo, avgPqo, avgFq_os] = saxs_average(q, funcname, parameters, nr, method, Rotmat, edgelength)
+function [yall, avgFo, avgPqo, avgFq_os] = saxs_average(q, funcname, parameters, nr, method, Rotmat, edgelength, varargin)
 % [y, y2, y3, y4] = saxs_average(q, funcname, parameters, nr, method, Rotmat)
 % Orientational average for particle scattering
 % Input
@@ -94,11 +94,11 @@ end
 %eval(strcmd);
 N = 2^6;
 %N = 2^7;
-if isempty(strfind(funcname, 'diazc'))
+% if ~contains(funcname, 'diazc')
+%     MAXpntat1compute = 25600*2; % This number provides the fast calculation.
+% else
     MAXpntat1compute = 25600*2; % This number provides the fast calculation.
-else
-    MAXpntat1compute = 25600*2; % This number provides the fast calculation.
-end
+% end
 %if N^2*nrp*numq > MAXpntat1compute
 if size(q,1)==1 & size(q,2)>1
     q = q(:);
@@ -273,9 +273,21 @@ function [Iqtemp, avgFq_o, avgPqo, avgF_so] = runcal
                 qy=Q(:,2);
                 qz=Q(:,3);
                 if ispolydisperse==0
-                    Ftemp = feval(funcname{inr}, qx, qy, qz, parameters{inr});
+                    if numel(varargin)==0
+                        Ftemp = feval(funcname{inr}, qx, qy, qz, parameters{inr});
+                    else
+                        if numel(varargin)==2
+                            Ftemp = feval(funcname{inr}, qx, qy, qz, parameters{inr}, varargin{1}, varargin{2});
+                        end
+                    end
                 else
-                    Ftemp = feval(funcname{inr}, qx, qy, qz, [parameters{inr}; edgelength]);
+                    if numel(varargin)==0
+                        Ftemp = feval(funcname{inr}, qx, qy, qz, [parameters{inr}; edgelength]);
+                    else
+                        if numel(varargin)==2
+                            Ftemp = feval(funcname{inr}, qx, qy, qz, [parameters{inr}; edgelength], varargin{1}, varargin{2});
+                        end
+                    end
                 end
             end
             %nn = nn+numel(nr{inr});
@@ -315,11 +327,23 @@ function [Iqtemp, avgFq_o, avgPqo, avgF_so] = runcal
             end
         else
             if ispolydisperse == 0
-                F1 = feval(funcname, qx, qy, qz, parameters);
+                if numel(varargin) ==0
+                    F1 = feval(funcname, qx, qy, qz, parameters);
+                else
+                    if numel(varargin) == 2
+                        F1 = feval(funcname, qx, qy, qz, parameters, varargin{1}, varargin{2});
+                    end
+                end
             else
 %                F1 = feval(funcname, qx, qy, qz, [parameters; edgelength]);
                 for indpoly=1:size(parameters, 1)
-                    F1(:,indpoly) = feval(funcname, qx, qy, qz, parameters(indpoly, :));
+                    if numel(varargin) ==0 
+                        F1(:,indpoly) = feval(funcname, qx, qy, qz, parameters(indpoly, :));
+                    else
+                        if numel(varargin)==2
+                            F1(:,indpoly) = feval(funcname, qx, qy, qz, parameters(indpoly, :), varargin{1}, varargin{2});
+                        end
+                    end
                 end
                 %F1(:,indpoly+1) = feval(funcname, qx, qy, qz, edgelength);
             end

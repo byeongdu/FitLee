@@ -1,5 +1,11 @@
 function [F, V] = saxstetrahedron(qx,qy,qz, L)
-
+% saxs form factor of a tetrahedron with the edge length L
+% Position: 
+%  1. A fact of triangle is on the xy plane.
+%  2. The mass center of the bottom triangle is at [0, 0, 0], therefore,
+%  the 4th tip is on the z axis.
+%  3. A tip of the bottom triangle is on the y axis.
+% 
 tol = 1E-15;
 tol2 = tol*1E-10;
 % [F, V] = saxstetrahedron2(qx,qy,qz, L);

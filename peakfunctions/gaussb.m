@@ -1,6 +1,6 @@
 function [y, name, pnames, pin]=gaussb(x,p, flag)
 % gauss     : Gaussian peak
-% [y, {name, pnames, pin}]=gauss(x,p, {flag}) 
+% [y, {name, pnames, pin}]=gaussb(x,p, {flag}) 
 % MFIT Gaussian fitting function
 % p = [ Amp Centre Width BackG ]
 
@@ -11,7 +11,7 @@ if nargin==2;
     y=p(4)+p(1)*exp(-0.5*((x-p(2))/p(3)).^2);
 else
 	y=[];
-	name='gaussian area';
+	name='gaussian peak';
 	pnames=str2mat('area','Centre','Width','Background');
 	if flag==1, pin=[0 0 1 1]; else pin = p; end
 	if flag==2

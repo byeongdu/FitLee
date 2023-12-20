@@ -29,7 +29,9 @@ switch cs
         p0 = sqrt(sum(p(2:3).^2));
         xt = sqrt(x.^2+y.^2);               % qz direction = 1
         I1 = lorza(xt, [p(1), p0, p(5), 0]); % qxy direction
-        Ig = lorza2D(x, y, [1, p(2), p(3), p(4)]); % azimuthal direction.
+        %Ig = lorza2D(x, y, [1, p(2), p(3), p(4)]); % azimuthal direction.
+        Ig = gauss2d(x, y, [1, p(2), p(3), p(4),p(4),0]);
+        %Ig = lorza2D(x, y, [1, p(2), p(3), p(4)]); % azimuthal direction.
     case 1
         p0 = sqrt(sum(p(2:4).^2));
         xt = sqrt(x.^2+y.^2+z.^2);

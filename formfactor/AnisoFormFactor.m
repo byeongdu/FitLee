@@ -196,7 +196,11 @@ for pshape = 1:numel(particles)
             parameter = particles{pshape}.BOXmodel;
         case 'pdb'
             fffunctionname = 'pdbFq';
-            parameter = particles{pshape}.pdb;
+            if isfield(particles{pshape}, 'position_atoms')
+                parameter = particles{pshape}.position_atoms;
+            else
+                parameter = particles{pshape}.pdb;
+            end
         case 'sphere'
             R = particles{pshape}.radius;
             if isfield(particles{pshape}, 'radius_sig')
@@ -278,8 +282,6 @@ for pshape = 1:numel(particles)
                 if numel(edL)==2
                     t = edL(2);
                     tr = t*R;
-                else
-                    tr = 0;
                 end
             else
                 R = particles{pshape}.radius;
@@ -288,9 +290,27 @@ for pshape = 1:numel(particles)
                     tr = t*R;
                 end
             end
-            parameter = [R, tr];
+            if isempty(tr)
+                parameter = R;
+            else
+                parameter = [R, tr];
+            end
 
             fffunctionname = 'saxstruncatedoctahedron';
+            
+        case 'facefilledto'
+            if isfromparticlemaker
+                if numel(edL) ~= 3
+                    error("Need three parameter for a facefilledTO")
+                else
+                    R = edL(1);
+                end
+            else
+                error("Define facefilledTO from particlemaker_PDB.")
+            end
+            parameter = edL;
+
+            fffunctionname = 'saxsfacefilledto';
             
         case 'pentagonalbipyramid'
             if isfromparticlemaker
@@ -345,7 +365,7 @@ for pshape = 1:numel(particles)
             end
             parameter = [R, tr];
             fffunctionname = 'saxscubooctahedron';
-            
+                        
         case 'cube'
             if isfromparticlemaker
                 R = edL(1);
@@ -606,7 +626,11 @@ if nargout >= 2
     elseif nargout >= 4  
         % <F(q)>_orient for only a q array for now.
 %        [Pq, Pqall, Fqmall, Pqmall, Fqall] = calPqMultiparticle(fname, QforPq, x, particles, x, n, dim, Rm);
-        [Pq_, Pqall_, Fqmall_, Pqmall_, Fqall_] = calPqMultiparticle(fname, QforPq, x, ob, x, n, dim, Rm);
+        if strcmp(fffunctionname, 'pdbFq')
+            Pq_ = 1; Pqall_ = 1; Fqmall_ = 1; Pqmall_ = 1; Fqall_=1;
+        else
+            [Pq_, Pqall_, Fqmall_, Pqmall_, Fqall_] = calPqMultiparticle(fname, QforPq, x, ob, x, n, dim, Rm);
+        end
 %         Fqmall = zeros(numq, numel(fname));
 %         for i=1:numel(fname)
 %             Fqmall(:,i) = saxs_averageFq(QforPq, fname{i}, x{i}, n{i}, dim, Rm{i});
@@ -707,13 +731,21 @@ function Fq = calFq(fffunctionname, qx, qy, qz, parameter, obj, xr, nr)
         
     if size(xr, 1) == 1
         % Monodisperse ordered particles.
-        Fq = feval(fffunctionname, qx, qy, qz, parameter);
+        if isempty(obj.Lshell)
+            Fq = feval(fffunctionname, qx, qy, qz, parameter);
+        else
+            Fq = feval(fffunctionname, qx, qy, qz, parameter, 'shell thickness', obj.Lshell);
+        end
     else
         % Polydisperse ordered particles.
         if obj.orientationfactor == 0
             Fq = zeros(numel(qx), 1);
             for isize=1:numel(nr)
-                tempint = feval(fffunctionname, qx, qy, qz, parameter*xr(isize)/parameter(1));
+                if isempty(obj.Lshell)
+                    tempint = feval(fffunctionname, qx, qy, qz, parameter*xr(isize)/parameter(1));
+                else
+                    tempint = feval(fffunctionname, qx, qy, qz, parameter*xr(isize)/parameter(1), 'shell thickness', obj.Lshell);
+                end
                 tempint(isnan(tempint)) = 0;
                 Fq = Fq + tempint*nr(isize);
             end
@@ -824,9 +856,17 @@ function [Pq, Fqm, Pqmono, Fq] = calPq(fffunctionname, q, parameter, obj, xr, nr
              return
         otherwise
             if nargout == 1
-                Pq = saxs_average(q, fffunctionname, xr, nr, dim, Rm, obj.edgelength);
+                if isempty(obj.Lshell)
+                    Pq = saxs_average(q, fffunctionname, xr, nr, dim, Rm, obj.edgelength);
+                else
+                    Pq = saxs_average(q, fffunctionname, xr, nr, dim, Rm, obj.edgelength, 'shell thickness', obj.Lshell);
+                end
             else
-                [Pq, Fqm, Pqmono, Fq] = saxs_average(q, fffunctionname, xr, nr, dim, Rm, obj.edgelength);
+                if isempty(obj.Lshell)
+                    [Pq, Fqm, Pqmono, Fq] = saxs_average(q, fffunctionname, xr, nr, dim, Rm, obj.edgelength);
+                else
+                    [Pq, Fqm, Pqmono, Fq] = saxs_average(q, fffunctionname, xr, nr, dim, Rm, obj.edgelength, 'shell thickness', obj.Lshell);
+                end
                 if numel(nr) == 1
                     Pq = Pq*nr;
                     Pqmono = Pqmono*nr;
