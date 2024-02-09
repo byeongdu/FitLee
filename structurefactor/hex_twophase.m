@@ -83,15 +83,15 @@ for i=1:numel(qhk)
     multip(i) = sum(ic1==i);
 end
 
+Fq = Fq(ind);
 if dR ~= -1
-    Pq2 = saxscylinder_CS(qhk, R, [1, 0], dR);
+    Pq2 = saxscylinder_CS(qhk(:), R, [1, 0], dR);
     Fq = Fq./sqrt(Pq2);
     Pq = saxscylinder_CS(q(:), R, [1, 0], dR);
 else
     Pq = ones(size(q));
 end
 
-Fq = Fq(ind);
 y = zeros(size(q));
 y = y(:);
 Iq = zeros(size(Fq));
@@ -105,4 +105,4 @@ for h = 1:numel(qhk)
     t = pseudovoigt(q, [Iq(h), qh, 0.00025, w]);
     y = y + t(:);
 end
-y = y*Pq;
+y = y.*Pq;
