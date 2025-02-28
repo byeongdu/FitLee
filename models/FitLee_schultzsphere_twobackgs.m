@@ -48,7 +48,7 @@ elseif isscalar(varargin)
     p = varargin{1};
     isini = 1;
     if ishandle(p)
-        guiadd(p);
+        guiadd_two(p);
         return
     end
     if ischar(p)
@@ -91,7 +91,7 @@ if isini
     bestP.poly4 = 0;
     bestP.SF_userBG1 = 1;
     bestP.SF_userBG2 = 1;
-    bestP.string = 'FitLee_schultzsphere5(figH)';
+    bestP.string = 'FitLee_schultzsphere_twobackgs(figH)';
     assignin('base', 'bestP', bestP);
     out = bestP;
     return
@@ -164,7 +164,7 @@ if nargout == 2
     
     report = '';
 end
-function guiadd(figH)
+function guiadd_two(figH)
     uph = findobj(figH, 'type', 'uipanel');
     pos = get(figH, 'position');
     hFigHeight = pos(end);
@@ -180,7 +180,7 @@ function guiadd(figH)
           'horizontalalignment'       , 'Left', ...
           'Style', 'pushbutton',...
           'String', 'Load Background 2',...
-          'Position', [50, hFigHeight-435, 150, 50],...
+          'Position', [50, hFigHeight-295, 150, 50],...
           'Callback', @setshape2);
 function setshape1(varargin)
     obj = varargin{1};
