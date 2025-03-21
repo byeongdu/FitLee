@@ -37,7 +37,7 @@ FitLee_helpstr = {'Schultz polydisperse sphere fit in absolute unit. ' ,...
 ' ',...
 'Byeongdu Lee (blee@anl.gov)',...
 'Ref: ',...
-'    1. Kwon et al. Nature Materials, 2015, 14, 215–223. ',...
+'    1. Kwon et al. Nature Materials, 2015, 14, 215ï¿½223. ',...
 '    2. Wang et al. J. Phys. Chem. C. 2013. 117(44), 22627. '};
 
 if numel(varargin) > 1
@@ -68,17 +68,17 @@ if isini
     bestP.r0 = 100;
     bestP.sig0 = 10;
     bestP.fn0 = 1;
-    bestP.delta_rho1 = 1;
-    bestP.Nratio1 = 0;
+%    bestP.delta_rho1 = 1;
+%    bestP.Nratio1 = 0;
     bestP.I0_1 = 1;
-    bestP.s_1 = 1;
-    bestP.Rg_1 = 300;
-    bestP.P_1 = 4;
-    bestP.Nratio2 = 0;
-    bestP.delta_rho2 = 1;
+    bestP.s_1 = 0;
+    bestP.Rg_1 = 30;
+    bestP.P_1 = 1;
+%    bestP.Nratio2 = 1;
+    % bestP.delta_rho2 = 1;
     bestP.I0_2 = 1;
-    bestP.s_2 = 1;
-    bestP.Rg_2 = 300;
+    bestP.s_2 = 0;
+    bestP.Rg_2 = 30;
     bestP.P_2 = 4;
     bestP.D = 100;
     bestP.vf = 0.0;
@@ -109,7 +109,7 @@ end
 try
     UBG1 = evalin('base', 'userbackground1');
     UBG1 = interp1(UBG1(:,1), UBG1(:,2), q);
-    UBG2 = evalin('base', 'userbackground1');
+    UBG2 = evalin('base', 'userbackground2');
     UBG2 = interp1(UBG2(:,1), UBG2(:,2), q);
 catch
     UBG1 = zeros(size(q));
@@ -125,22 +125,28 @@ q = q(:);
 [Pq1, V1, V0] = SchultzsphereFun(q, p.r0, p.sig0);
 Pq0 = V1*Pq1(:);
 
+
 Sq = strfactor2(q, p.D, p.vf);
-Pq1 = guinierporodmodel(q, p.I0_1, p.P_1, p.Rg_1, p.s_1);
-Pq2 = guinierporodmodel(q, p.I0_2, p.P_2, p.Rg_2, p.s_2);
+Pq1 = guinierporodmodel(q, 1, p.P_1, p.Rg_1, p.s_1);
+Pq2 = guinierporodmodel(q, 1, p.P_2, p.Rg_2, p.s_2);
+Pq1 = Pq1*p.I0_1;
+Pq2 = Pq2*p.I0_2;
 
 %Sq = p(4)*q(:).^p(5) + strfactor_2Dpara(q, p(6), p(7));
 %Iq = p(1)*Imat*nr1/sum(nr1)
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4 + p.SF_userBG1*UBG1 + p.SF_userBG2*UBG2;
-pnumberfraction = p.fn0/(V0);
+pnumberfraction = p.fn0;
 f = pnumberfraction*r_e^2;
-Iq0 = f*p.delta_rho0^2*Pq0.*Sq/Angstrom2Centimeter;
-Iq1 = f*p.Nratio1*p.delta_rho1^2*Pq1/Angstrom2Centimeter;
-Iq2 = f*p.Nratio2*p.delta_rho2^2*Pq2/Angstrom2Centimeter;
-Ipw = p.powI*q.^p.PorodExp;
-Iq = Iq0 + Iq1 + Iq2;
-out = Ipw + Iq + back;
-out = [out(:), Ipw(:), Iq0(:), Iq1(:), Iq2(:), Ipw(:), back(:)];
+Sqa = Sq + Pq1;
+%Iq0 = f*p.delta_rho0^2*Pq0.*Sq/Angstrom2Centimeter;
+Iq0 = f*p.delta_rho0^2*Pq0.*Sqa/Angstrom2Centimeter;
+%Iq1 = f*p.Nratio1*p.delta_rho1^2*Pq1/Angstrom2Centimeter;
+%Iq2 = f*p.Nratio2*p.delta_rho0^2*Pq2/Angstrom2Centimeter;
+Ipw = p.powI./q.^p.PorodExp;
+Iq = Iq0;% + Iq1 + Iq2;
+out = Ipw + Iq + Pq2 + back; %Iq2;
+%out = [out(:), Ipw(:), Iq0(:), Iq1(:), Iq2(:), Ipw(:), back(:)];
+out = [out(:), Ipw(:), Iq0(:), Sqa(:), Pq2, back(:)];
 if isnan(out)
     out = ones(size(out));
 end
@@ -205,4 +211,4 @@ function setshape2(varargin)
     end
     filename = fullfile(pathname, filesep, filename);
     [~, data] = hdrload(filename);
-    assignin('base', 'userbackground2', data)    
+    assignin('base', 'userbackground2', data)

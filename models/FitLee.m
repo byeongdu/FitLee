@@ -172,7 +172,15 @@ end
         Npnames = numel(pnames)-sum(is_nodisplay);
         posScreen   = get(0,'screenSize');
         hFigWidth   = 650;
-        hFigHeight  = Npnames*20 + 100;
+        Np_max = 35;
+        panelWidth = 220;
+        if Npnames > Np_max
+            hFigHeight  = Np_max*20 + 100;
+            n = fix((Npnames-1)/Np_max);
+            hFigWidth   = hFigWidth*(n+1)-(panelWidth+50)*n;
+        else
+            hFigHeight  = Npnames*20 + 100;
+        end
         if hFigHeight<hFigHeight_default
             hFigHeight = hFigHeight_default;
         end
@@ -215,7 +223,7 @@ end
           'ForegroundColor'             ,[0, 0, 1],...
           'Borderwidth'                 ,2,...
           'Units'                       , 'pixels', ...
-          'position'                    ,   [0, 0, 220, hFigHeight],...
+          'position'                    ,   [0, 0, panelWidth, hFigHeight],...
           'bordertype'                , 'beveledin', ...
           'tag'                       , 'versionPanel');
 
@@ -478,14 +486,24 @@ end
             ud = cell2struct(f, c);
             set(gcf, 'userdata', ud)
         end
+        n = 0;
         for i=1:numel(pnames)
-            position(1) = baseHpos + 20;
-            position(2) = 20*(i-1) + 25 + baseVpos;
+            Hbase = 400*n;
+            Vbaseindex = Np_max*n;
+            %else
+            %    Hbase = 0;
+            %    Vbaseindex = 0;
+            %end
+            position(1) = baseHpos + 20 + Hbase;
+            position(2) = 20*(i-1-Vbaseindex) + 25 + baseVpos;
             label = pnames{i};
             if ~contains(label, 'option')
                 if ~contains(pnames{i}, 'no_display') && ~strcmp(pnames{i}, 'string')
                     generate_uifit(position, label, bestP.(pnames{i}), i, figH);
                 end
+            end
+            if mod(i, Np_max)==0
+                n = n + 1;
             end
         end
     end

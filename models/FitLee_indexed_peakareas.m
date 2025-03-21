@@ -41,7 +41,7 @@ if isini
     bestP = [];
 
     for i=1:Nf
-        bestP.(['Area', num2str(i)]) = peaks(i, 2)/peaks(1,2)*100;
+        bestP.(['Area', num2str(i)]) = peaks(i, 2);
     end
     % Need 4 parameters for background.
     bestP.Gaussian_Width = 0.005;

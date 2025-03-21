@@ -92,7 +92,6 @@ end
 
 %strcmd = ['F = @', funcname, ';'];
 %eval(strcmd);
-N = 2^6;
 %N = 2^7;
 % if ~contains(funcname, 'diazc')
 %     MAXpntat1compute = 25600*2; % This number provides the fast calculation.
@@ -106,7 +105,13 @@ end
 QQ = q;
 numq = numel(q(:,1));
 
-qseg = fix(N^2*nrp*numq/MAXpntat1compute);
+if size(q, 2)==2
+    N = 90;
+    qseg = fix(N*2*nrp*numq/MAXpntat1compute);
+else
+    N = 2^6;
+    qseg = fix(N^2*nrp*numq/MAXpntat1compute);
+end
 NumQseg = round(numq/qseg);
 if qseg == 0
     NumQseg = numq;
@@ -192,19 +197,19 @@ function [Iqtemp, avgFq_o, avgPqo, avgF_so] = runcal
             sinth = sin(theta);
             sizeqx = size(qx);
         case 3 %2D average
-            dtheta = pi/(2*N);
-            max_theta = pi; % When max_theta = pi, it only integrate 1/2.
-            theta = 0:dtheta:max_theta;
+            dtheta = 2*pi/(2*N);
+            max_theta = 2*pi-dtheta; % When max_theta = pi, it only integrate 1/2.
+            th = 0:dtheta:max_theta;
             IA = max_theta;
             %theta = 0:dtheta:pi;
             %phi = 0:dphi:2*pi;
             if size(q,2) == 1
-                [r, theta] = ndgrid(q, theta);
+                [r, theta] = ndgrid(q, th);
                 qx = r.*cos(theta);
                 qy = r.*sin(theta);
                 qz = zeros(size(qx));
             else
-                [r, theta] = ndgrid(q(:,1), theta);
+                [r, theta] = ndgrid(q(:,1), th);
                 qx = r.*cos(theta);
                 qy = r.*sin(theta);
                 qz = repmat(q(:,2), 1, size(qx, 2));
