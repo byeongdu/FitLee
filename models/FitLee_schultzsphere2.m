@@ -33,7 +33,7 @@ if numel(varargin) > 1
     p = varargin{1};
     q = varargin{2};
     isini = 0;
-elseif numel(varargin) == 1
+elseif isscalar(varargin)
     p = varargin{1};
     isini = 1;
     if ischar(p)

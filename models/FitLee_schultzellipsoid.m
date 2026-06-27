@@ -11,14 +11,14 @@ FitLee_helpstr = {'Schultz polydisperse ellipsoid (0) and sphere (1) fit. ' ,...
 '',...
 'Byeongdu Lee (blee@anl.gov)',...
 'Ref: ',...
-'    1. Kwon et al. Nature Materials, 2015, 14, 215–223. ',...
+'    1. Kwon et al. Nature Materials, 2015, 14, 215ï¿½223. ',...
 '    2. Wang et al. J. Phys. Chem. C. 2013. 117(44), 22627. '};
 
 if numel(varargin) > 1
     p = varargin{1};
     q = varargin{2};
     isini = 0;
-elseif numel(varargin) == 1
+elseif isscalar(varargin)
     p = varargin{1};
     isini = 1;
     if ischar(p)
@@ -32,7 +32,6 @@ end
 
 %% initialize fit parameter bestP
 if isini
-    Nf = p;
     bestP = [];
     bestP.r0 = 100;
     bestP.sig0 = 10;

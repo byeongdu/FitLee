@@ -542,7 +542,7 @@ q = q(:);
 
 
 % Calculation function
-[predY, fit] = multivoight(parameters, q);
+[predY, fit] = multivoigt(parameters, q);
 
 cv = chi_squared(y, predY, 5);
 fit.fit = [q(:), predY(:), y(:)];

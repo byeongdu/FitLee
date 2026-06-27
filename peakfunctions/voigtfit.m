@@ -1,6 +1,6 @@
 function voigtfit(varargin)
-% voightfit ('function name', parameter, prefitfunctionname)
-fitfunctionname = 'multivoight';% default function;
+% voigtfit ('function name', parameter, prefitfunctionname)
+fitfunctionname = 'multivoigt';% default function;
 
 if numel(varargin) >= 1
     fitfunctionname = varargin{1};
@@ -567,7 +567,7 @@ handles = guihandles(figH);
     function cv = fitfunction(p, y, q)
 
         % Calculation function
-        %[predY, fit] = multivoight(parameters, q);
+        %[predY, fit] = multivoigt(parameters, q);
         % q : it can be either array or a cell for multiple data set
         % y : it can be either array or a cell for multiple data set
         % q and y should have the same length.
