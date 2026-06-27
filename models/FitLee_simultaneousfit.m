@@ -1,6 +1,6 @@
 function FitLee_simultaneousfit(FitLeehandles, EqParam, ParamRatio)
 % for simultaneous fitting of multiple data with the same model
-% FitLee_simultaneousfit(FitLeehandles, Indices of Paramters to be the same, ParamRatio)
+% FitLee_simultaneousfit(FitLeehandles, Indices of Parameters to be the same, ParamRatio)
 % Examples
 % obj1 = FitLee('FitLee_coreshell_schultzsphere')
 % obj2 = FitLee('FitLee_coreshell_schultzsphere')

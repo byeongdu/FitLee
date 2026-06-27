@@ -48,7 +48,7 @@ j = sqrt(-1);
             %Aatm = zeros(size(qx));
             
             for qxindex = 1:numel(qx)
-                if numel(atmtype) == 1
+                if isscalar(atmtype)
                     FF = Fq(qindex);
                 else
                     if size(Fq, 1) >= qindex
@@ -104,7 +104,7 @@ j = sqrt(-1);
 
             Aatm = zeros(size(qx));
             for atmindex = 1:numel(x)
-                if numel(atmtype) == 1
+                if isscalar(atmtype)
                     FF = Fq(qindex);
                 else
                     FF = Fq(qindex, atm(atmindex));

@@ -10,6 +10,7 @@ function y = cylinder_amp(qx, qy, qz, R, L, cyl_Lvector)
 qvector = [qx(:), qy(:), abs(qz(:))];
 cyl_Lvector = repmat(cyl_Lvector, numel(qvector)/3, 1);
 alpha = angle2vect(cyl_Lvector, qvector);
+alpha(isnan(alpha))=pi/2;
 q = sqrt(qx.^2+qy.^2+abs(qz).^2);q = q(:);
 %centofcyl = 0;
 y = 2*pi*R.^2*L*besseljc(R*q.*sin(alpha)).*sinc(L*q.*cos(alpha)/2);%.*exp(-j*qz*centofcyl);

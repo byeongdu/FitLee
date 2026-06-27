@@ -3,15 +3,31 @@ function [out, report] = FitLee_coreshellshell_polymer(varargin)
     % This function is only for fitting a set of data at a time.
     % if numel(varargin) == 1 and p is not a struct but a number, then
     % it generate set of default parameters for using this function.
-FitLee_helpstr = {'Schultz polydisperse sphere fit. ' ,...
-'I(q) = I0*(Sq*P(q; r0, sig0) + I1*P(q; r1, sig1)) + background',...
-'    Sq = powI*q.^PorodExp + S(q; D, vf)',...
-'    background = poly1*q.^poly2 + poly3*q + poly4',...
-'CF. if you have data in absolute unit, consider use FitLee_schultzsphere2',...
+FitLee_helpstr = {'Polydisperse core-shell-shell sphere with polymer chains, absolute unit $(cm^{-1}). $' ,...
+'',...
+'$I(q) = r_e^2 \cdot \left\{ (fn0/\left<V_p\right>) \cdot \left( \left<|F_{cs}|^2\right> \cdot S_0(q) + N_c \cdot |F_{chain}|^2 \cdot S_1(q) \right) \right.$',...
+'$\qquad\qquad \left. + (fn1/\left<V_1\right>) \cdot \Delta\rho_1^2 \cdot \left<|F_{sph}|^2\right> \cdot S_1(q) \right\} + I_b$',...
+'$\qquad    S\_0(q) = S_{HS}(q; D0, vf0), \quad S\_1(q) = S_{HS}(q; D, vf)$',...
+'$\qquad    I_b = poly1 \cdot q^{poly2} + poly3 \cdot q + poly4$',...
+'',...
+'$Parameters$',...
+'$\quad  fn0$ : volume fraction of core-shell-shell particles (dimensionless)',...
+'$\quad  coreRdivshR, sigCore$ : core-to-shell radius ratio and its rel. width',...
+'$\quad  shellR, sigshellR$ : shell radius peak (A) and rel. width',...
+'$\quad  sh2thick, sigsh2thick$ : 2nd shell thickness peak (A) and rel. width',...
+'$\quad  core\_edensity, sh1\_edensity, sh2\_edensity, solvent\_edensity$ : electron density in $A^{-3}$',...
+'$\quad  d\_edensity\_chain$ : chain-vs-solvent electron density contrast $(A^{-3})$',...
+'$\quad  Nc, Rg$ : number of chains per particle and chain radius of gyration (A)',...
+'$\quad  fn1, d\_edensity1, r1, sig1$ : optional 2nd sphere population $(fn1 = 0$ disables$)$',...
+'$\quad  D0, vf0$ : $S(q)$ for core-shell-shell particles',...
+'$\quad  D, vf$ : $S(q)$ for chains and 2nd sphere',...
+'',...
+'Note: $r_e$ = 2.818E-5 A is the classical electron radius.',...
+'$  I(q) units: (A^{-3}) * (A^2) * (A^0) = A^{-1}, /1E-8 (cm/A) -> cm^{-1}.$',...
 '',...
 'Byeongdu Lee (blee@anl.gov)',...
 'Ref: ',...
-'    1. Kwon et al. Nature Materials, 2015, 14, 215–223. ',...
+'    1. Kwon et al. Nature Materials, 2015, 14, 215-223. ',...
 '    2. Wang et al. J. Phys. Chem. C. 2013. 117(44), 22627. '};
 
 if numel(varargin) > 1
@@ -32,26 +48,26 @@ end
 
 %% initialize fit parameter bestP
 if isini
-    Nf = p;
     bestP = [];
     bestP.D0 = 100;
     bestP.vf0 = 0.01;
-    bestP.I0 = 4.6095e-13;
+    bestP.fn0 = 0.01;                 % volume fraction of core-shell-shell particles
     bestP.coreRdivshR = 0.245672;
     bestP.sigCore = 0.097654;
     bestP.shellR = 247.691904;
     bestP.sigshellR = 0.012843;
     bestP.sh2thick = 42.636334;
     bestP.sigsh2thick = 0.046388;
-    bestP.core_rho = 0.38;
-    bestP.sh1_rho = 0.39;
-    bestP.sh2_rho = 0.42;
-    bestP.solvent_rho = 0.3344;
-    bestP.d_rho_chain = 1;
+    bestP.core_edensity = 0.38;            % electron density in A^-3
+    bestP.sh1_edensity = 0.39;
+    bestP.sh2_edensity = 0.42;
+    bestP.solvent_edensity = 0.3344;
+    bestP.d_edensity_chain = 0.05;         % chain-vs-solvent electron density contrast (A^-3)
     bestP.Nc = 100;
     bestP.Rg = 50;
-    % Need 4 parameters for background.
-    bestP.I1 = 0;
+    % Optional second sphere population (disable with fn1 = 0)
+    bestP.fn1 = 0;                         % volume fraction
+    bestP.d_edensity1 = 0.05;              % electron density contrast (A^-3)
     bestP.r1 = 35;
     bestP.sig1 = 3.5;
     bestP.D = 100;
@@ -74,32 +90,45 @@ if iscell(q)
 end
 
 q = q(:);
+Angstrom2Centimeter = 1E-8;
+r_e = 2.818E-5;   % classical electron radius (A)
 
 method = 1;
 
+% Polymer chain contribution (per chain): (d_edensity*V_chain)^2 * Debye(qRg)  [units A^0]
 Rg = p.Rg;
-Vchain = 4*pi/3*(Rg).^3;
-Pc = p.Nc*(p.d_rho_chain*Vchain)^2*Pchain(q, Rg);
+Vchain = 4*pi/3*Rg^3;
+Pc_perchain = (p.d_edensity_chain*Vchain)^2 * Pchain(q, Rg);
+Pc_perparticle = p.Nc * Pc_perchain;     % Nc chains per core-shell-shell particle
 
+% Core-shell-shell: <|F_cs|^2> and matching <V_p> from the SAME distribution grid
+[Iq_cs, V_p_mean] = coreshell(p, q, method);
 
-Iq = coreshell(p, q, method);
-
-[Pq1, V1] = SchultzsphereFun(q, p.r1, p.sig1);
-Pq1 = V1*Pq1(:);
+% Structure factors and background
 Sq0 = strfactor2(q, p.D0, p.vf0);
 Sq1 = strfactor2(q, p.D, p.vf);
-%Sq = p.powI*q.^p.PorodExp + Sq1;
-
 back = p.poly1*q.^p.poly2 + p.poly3*q + p.poly4;
 
-Iq1 = p.I0*Iq.*Sq0;
-Iq2 = p.I1*Pq1.*Sq1;
-Pc = Pc.*Sq1;
+% Absolute scale: I[cm^-1] = (fn0/<V_p>)[A^-3] * r_e^2[A^2] * <|F|^2>[A^0] / 1E-8 [cm/A]
+pscale_cs = p.fn0 / V_p_mean * r_e^2 / Angstrom2Centimeter;
+Iq1 = pscale_cs * Iq_cs(:)        .* Sq0;
+Pc  = pscale_cs * Pc_perparticle(:) .* Sq1;
+
+% Optional second sphere population
+if p.fn1 > 0
+    [Pq1_norm, V1_2, V1_1] = SchultzsphereFun(q, p.r1, p.sig1);
+    Pq1_F2  = V1_2 * Pq1_norm(:);   % <|F|^2 / d_edensity^2> in A^6
+    pscale1 = (p.fn1 / V1_1) * p.d_edensity1^2 * r_e^2 / Angstrom2Centimeter;
+    Iq2 = pscale1 * Pq1_F2 .* Sq1;
+else
+    Iq2 = zeros(numel(q), 1);
+end
+
 out = Iq1 + Iq2 + Pc + back;
 out = [out(:), Iq1(:), Iq2(:), Pc(:), back(:)];
 
-if isnan(out)
-    out = ones(size(out))*1E20;
+if any(isnan(out(:)))
+    out = ones(size(out));
 end
 
 if nargout == 2
@@ -107,13 +136,13 @@ if nargout == 2
     rho = zeros(size(x));
     t = x < p.coreRdivshR*p.shellR;
     
-    rho(t) = p.core_rho;
+    rho(t) = p.core_edensity;
     t = (x >= p.coreRdivshR*p.shellR) & (x < p.shellR);
-    rho(t) = p.sh1_rho;
+    rho(t) = p.sh1_edensity;
     t = (x >= p.shellR) & (x < p.shellR+p.sh2thick);
-    rho(t) = p.sh2_rho;
+    rho(t) = p.sh2_edensity;
     t = (x >= p.shellR+p.sh2thick);
-    rho(t) = p.solvent_rho;
+    rho(t) = p.solvent_edensity;
     
     figure;
     plot(x, rho);xlabel('Radius (A)');ylabel('\rho (R)')
@@ -124,9 +153,12 @@ function y = Pchain(q, Rg)
     x = (q*Rg).^2;
     y = 2*(exp(-x)-1+x)./x.^2;
 
-function Iq = coreshell(p, q, method)
+function [Iq, V_p_mean] = coreshell(p, q, method)
+% V_p_mean : mean total particle volume <V_p> = <(4pi/3)*(shellR + sh2thick)^3>
+%            computed from the SAME nr2, nr3 distribution grids used for <|F|^2>,
+%            so the per-particle factor cancels in (fn0/<V_p>) * <|F|^2>.
 
-% method = 1;
+V_p_mean = NaN;   % set inside method branches
 
 if method == 1
     if p.sigCore ==0
@@ -173,14 +205,26 @@ if method == 1
                 end
             end
             if p.coreRdivshR == 0
-                eden = [p.sh1_rho, p.sh2_rho, p.solvent_rho];
+                eden = [p.sh1_edensity, p.sh2_edensity, p.solvent_edensity];
             else
-                eden = [p.core_rho, p.sh1_rho, p.sh2_rho, p.solvent_rho];
+                eden = [p.core_edensity, p.sh1_edensity, p.sh2_edensity, p.solvent_edensity];
             end
             yt = multilayersphere2(q, rad,eden, nr3);
             yf = yf + yt(:)*nr2(mm)*nr1(kk);
         end
     end
+    % <V_p> over the (r2, r3) grid; uses identical nr2/nr3 sums to the loop above,
+    % so any truncation/normalization drift cancels in (fn0/<V_p>) * <|F|^2>.
+    Vp_acc = 0; norm_acc = 0;
+    for mm = 1:numel(nr2)
+        for ll = 1:numel(nr3)
+            w = nr2(mm) * nr3(ll);
+            R_outer = r2(mm) + r3(ll);
+            Vp_acc   = Vp_acc   + w * (4*pi/3) * R_outer^3;
+            norm_acc = norm_acc + w;
+        end
+    end
+    V_p_mean = Vp_acc / norm_acc;
 end
 if method == 2
     Rmat = evalin('base', 'Rmat');
@@ -197,11 +241,11 @@ if method == 2
             nr3 = schultz(p.shellR+p.sh2thick, p.sigsh2thick, r2);
         end
         %dist3 = nr3;
-        eden = [p.sh1_rho, p.sh2_rho, p.solvent_rho];
+        eden = [p.sh1_edensity, p.sh2_edensity, p.solvent_edensity];
         dis = {nr2, nr3};
         Fm = {Rmat.Fmat2, Rmat.Fmat3};
     else
-        eden = [p.core_rho, p.sh1_rho, p.sh2_rho, p.solvent_rho];
+        eden = [p.core_edensity, p.sh1_edensity, p.sh2_edensity, p.solvent_edensity];
         nr1 = schultz(p.coreRdivshR*p.shellR, p.coreRdivshR*p.sigCore*p.shellR, Rmat.r1);
         Rmat.dist1 = nr1;
         nr2 = schultz(p.shellR, p.sigshellR, Rmat.r2);

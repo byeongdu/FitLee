@@ -50,7 +50,7 @@ function figH = FitLee(varargin)
 % FitLee ('function name', parameter)
 % FitLee ('function name', action)
 %   for actions, type the callback function name.
-%   for instance, FitLee('multivoight', 'pushbutton_Fit_callback')
+%   for instance, FitLee('multipseudovoigt', 'pushbutton_Fit_callback')
 % User can define 'pre_userfit' function handle.
 %   This will be run before fit and simulation.
 % Example:
@@ -66,7 +66,7 @@ if exist('fminsearchcon', 'file') ~= 2
     error('Need "fminsearchcon.m". Download and keep it in FitLee folder.')
 end
 
-fitfunctionname = 'FitLee_multivoight';% default function;
+fitfunctionname = 'FitLee_multipseudovoigt';% default function;
 
 if numel(varargin) >= 1
     fitfunctionname = varargin{1};
@@ -171,7 +171,7 @@ end
         is_nodisplay = contains(pnames, 'no_display');
         Npnames = numel(pnames)-sum(is_nodisplay);
         posScreen   = get(0,'screenSize');
-        hFigWidth   = 650;
+        hFigWidth   = 770;   % was 650; widened to fit 4-column bottom button row
         Np_max = 35;
         panelWidth = 220;
         if Npnames > Np_max
@@ -465,6 +465,15 @@ end
           'backgroundcolor'           , [1,1,1], ...
           'horizontalalignment'       , 'center', ...
           'parent'                    , figH, ...
+          'string'                  ,   'Publication plot',...
+          'callback'                , @pb_publishplot_Callback,...
+          'position'                  ,[baseHpos+Fitbuttonwidth*3+Hbuttongap, 10,Fitbuttonwidth,25], ...
+          'tag'                       , 'pb_publishplot');
+        uicontrol(...
+          'style'                     , 'pushbutton', ...
+          'backgroundcolor'           , [1,1,1], ...
+          'horizontalalignment'       , 'center', ...
+          'parent'                    , figH, ...
           'string'                  ,   'Simulate',...
           'callback'                , @pushbutton_simulate_Callback,...
           'position'                  ,[baseHpos+20, 60,Fitbuttonwidth,25], ...
@@ -623,13 +632,12 @@ end
     end
     function pushbutton_reference_Callback(varargin)
         FitLee_helpstr = fitFunHandle('help');
-        CreateStruct.Interpreter = 'tex';
-        CreateStruct.WindowStyle = 'modal';
-        if ~isempty(FitLee_helpstr)
-            h = mymsgbox(FitLee_helpstr, 'Help', CreateStruct);
-        else
-            h = msgbox('No help available', 'Help');
+        if isempty(FitLee_helpstr)
+            msgbox('No help available', 'Help');
+            return
         end
+        titleStr = ['Reference: ', fitfunctionname];
+        BLFit_referencewindow(FitLee_helpstr, titleStr);
     end
     function edit_UB_callback(varargin)
         %fit = evalin('base', 'fit');
@@ -1047,6 +1055,9 @@ end
     end
     function pb_plotstyle_Callback(varargin)
         BLFit_plotstyle(handles);
+    end
+    function pb_publishplot_Callback(varargin)
+        BLFit_publishplot(handles);
     end
     function pb_LL_Callback(varargin)
         hObject = varargin{1};

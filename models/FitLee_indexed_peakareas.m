@@ -7,7 +7,7 @@ global FitLee_helpstr
 FitLee_helpstr = {'Fit peak areas for a curve indexed by indexing ' ,...
 '',...
 'Note that',...
-'I(q)_diff_cross_section = (delta_rho*r_e)^2*f_n*P(q)',...
+'I(q)_diff_cross_section = (delta\_rho*r_e)^2*f_n*P(q)',...
 '         , where P(0) = V_p^2'...
 ' ',...
 'Byeongdu Lee (blee@anl.gov)',...
@@ -62,15 +62,38 @@ if iscell(q)
     q = q{1};
 end
 
+back_goodpix = [];
 
 try
     UBG = evalin('base', 'userbackground');
-    UBG = interp1(UBG(:,1), UBG(:,2), q);
+    q = round(q, 6);
+    UBG(:,1) = round(UBG(:,1), 6);
+    k = UBG(:,1)<q(1) | UBG(:,1)>q(end);
+    UBG(k,:) = [];
+    if numel(q) == numel(UBG(:,1))
+        if size(UBG, 2)==3
+            back_goodpix = logical(UBG(:,3));
+        else
+            back_goodpix = logical(size(UBG(:,2)));
+        end
+        bg = UBG(:,2);
+    else
+        bg = interp1(UBG(:,1), UBG(:,2), q);
+    end
 catch
-    UBG = zeros(size(q));
+    bg = zeros(size(q));
+end
+
+if ~isempty(back_goodpix)
+    dt_goodpix = ~back_goodpix;
+    p_start = find(diff(dt_goodpix)==1)+1;
+    p_end = find(diff(dt_goodpix)==-1);
+else
+    p_start = [];
+    p_end = [];
 end
 peaks = evalin('base', 'indexing_hkls');
-back = p.SF_userBG*UBG;
+back = p.SF_userBG*bg;
 
 predYs = {};
 predY = zeros(size(q));
@@ -84,11 +107,22 @@ end
 
 for k=1:np
     w =  peakwidth(peaks(k,1), 0.5, p.Domain_Size, p.Microstrain);
+    qv = peaks(k,1);
     pa = [p.(['Area', num2str(k)]), ...
-        peaks(k,1), p.Gaussian_Width, w, 0];
+        qv, p.Gaussian_Width, w, 0];
     pa = abs(pa);
-    predYs{k} = abs(pseudovoigt(q, pa));
-    predY = predY + predYs{k};
+    y = abs(pseudovoigt(q, pa));
+    if ~isempty(p_start)
+        [~, ind] = min(abs(q-qv));
+        t = find(p_start<ind);pind = t(end);
+        p2 = p_end(pind);
+        p1 = p_start(pind);
+        pn = polyfit([q(p1), q(p2)], [y(p1), y(p2)], 1);
+        y = y-(pn(1)*q+pn(2));
+        y(1:(p1-1)) = 0;
+        y((p2+1):end) = 0;
+    end
+    predY = predY + y;
 end
 predY = predY + back;
 out = predY;

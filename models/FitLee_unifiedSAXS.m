@@ -42,7 +42,6 @@ if isini
     bestP.B2 = 0.0001;
     bestP.P2 = 2;
     bestP.background = 0;
-    bestP.SF_userBG = 1;
     assignin('base', 'bestP', bestP);
     out = bestP;
     return
@@ -57,13 +56,6 @@ if iscell(q);
 end
 q = q(:);
 
-
-try
-    UBG = evalin('base', 'userbackground');
-    UBG = interp1(UBG(:,1), UBG(:,2), q);
-catch
-    UBG = zeros(size(q));
-end
 
 G1 = p.G1;
 Rg1 = p.Rg1;
@@ -106,7 +98,7 @@ Iq1 = unifiedSAXS(p, q);
 Iq2 = unifiedSAXS(p, q);
 
 background = p.background;
-out = Iq1 + Iq2 + background + p.SF_userBG*UBG;
+out = Iq1 + Iq2 + background;
 
 if isnan(out)
     out = ones(size(out));

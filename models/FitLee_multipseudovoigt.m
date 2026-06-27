@@ -5,10 +5,10 @@ FitLee_helpstr = {'\bf{pseudo Voigt fit}',...
 'Byeongdu Lee (blee@anl.gov)'};
 
 % Usage:
-% FitLee_multivoight(N of peaks)
-% FitLee('FitLee_multivoight', bestP)
+% FitLee_multipseudovoigt(N of peaks)
+% FitLee('FitLee_multipseudovoigt', bestP)
 %
-% multivoight function.
+% multipseudovoigt function.
 % if numel(varargin) == 1 and p is not a struct but a number, then
 % it generate set of default parameters for using this function.
 %

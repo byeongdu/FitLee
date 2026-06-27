@@ -5,7 +5,7 @@ function [ret, rtn] = findcellstr(cstr, fstring)
 % rtn is 1 or 0
 %
 % cstr : cellstring
-% fstring : string to find
+% fstring : string which you are looking for
 % Byeongdu Lee, Nov 28, 2007
 
 if ischar(fstring)
@@ -14,6 +14,14 @@ elseif iscell(fstring)
     ret = zeros(size(fstring));
     for i=1:numel(fstring)
         ret(i) = getindex(cstr, fstring(i));
+    end
+elseif isnumeric(fstring)
+    ret = 0;rtn = 0;
+    for i=1:numel(cstr)
+        if all(cstr{i} == fstring)
+            ret = i;
+            rtn = 1;
+        end
     end
 end
 

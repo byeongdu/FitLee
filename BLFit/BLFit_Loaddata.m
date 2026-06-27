@@ -12,10 +12,11 @@ else
     filen = filename;
 end
 cl = ['o','^','v','s','+'];
-dt = {};
+dt   = cell(1, numel(filen));
+hdrs = cell(1, numel(filen));
 for i=1:numel(filen)
     filename = fullfile(pathname, filesep, filen{i});
-    [~, data] = hdrload(filename);
+    [hdrs{i}, data] = hdrload(filename);
     k = isnan(data(:,1));data(k,:) = [];
     k = isnan(data(:,2));data(k,:) = [];
     dt{i} = data;
@@ -43,6 +44,13 @@ end
 titlestr = filen{end};
 t = strfind(titlestr, '_');titlestr(t) = ' ';
 title(titlestr);
+
+% If the data header mentions xlabel / ylabel, set the standard SAXS axis labels.
+hdrtext = lower(reshape(hdrs{end}.', 1, []));
+if contains(hdrtext, 'xlabel') || contains(hdrtext, 'ylabel')
+    xlabel('q (\AA^{-1})')
+    ylabel('I(q) (cm^{-1})')
+end
 warning off
 matlabver = version;
 t = strfind(matlabver, '.');
