@@ -30,4 +30,4 @@ if length(rr) > 40
     rr = rr(1:fix(length(rr)/20):end);
     dist = dist(1:fix(length(dist)/20):end);
 end
-dist = dist/sumrr;
+dist = dist/sum(dist);   % normalize after (possible) decimation so sum(dist) == 1
