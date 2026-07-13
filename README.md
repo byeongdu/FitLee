@@ -43,6 +43,7 @@ ydata = a(:,2);
 % put the intensity to the FitLee
 set(fit.datahandle, 'ydata', ydata);
 fit.yd = ydata;
+fit.data{1} = [a(:,1), a(:,2)];
 
 % if needed change the Lower boundary (LB) or Upper boundary (UB)
 while 1
